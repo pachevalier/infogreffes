@@ -1,113 +1,29 @@
 ---
-title: "Analyse des doublons dans les données Infogreffes"
+title: "Infogreffes"
 output: html_notebook
 ---
-
-- J'analyse les chiffres clés d'Infogreffes pour détecter les cas où deux informations contradictoires sont données pour une même période. 
-
 
 ```{r init, message=FALSE}
 library("dplyr")
 library("readr")
-```
-
-## Fichier 2015 
-
-```{r, message=FALSE, warning=FALSE, comment=FALSE}
-table_chiffrescles_2015 <- read_csv2(
-  file = "data/chiffres-cles-2015.csv", 
-  col_types = cols(siren = col_character())
-  ) 
-```
-
-
-```{r}
-table_chiffrescles_2015 %>% 
-  distinct(siren) %>% 
-  nrow()
+library("infogreffes")
 ```
 
 ```{r}
-table_chiffrescles_2015 %>% 
-  group_by(siren) %>% 
-  filter(n() > 1) %>% 
-  distinct(siren) %>% 
-  nrow()
-```
-
-On a des informations en double pour 3 957 entreprises.
-
-```{r}
-table_chiffrescles_2015 %>%
-  select(siren, 
-         ca = ca_1, 
-         resultat = resultat_1, 
-         duree = duree_1, 
-         date_cloture = date_de_cloture_exercice_1, 
-         date_de_publication) %>% 
-  distinct(siren, ca, resultat, date_cloture, .keep_all = TRUE) %>% 
-  filter(is.na(ca) == FALSE) %>% 
-  group_by(siren, date_cloture) %>% 
-  filter(n() > 1) %>%
-  arrange(siren, date_de_publication) 
-```
-
-Pour 8 entreprises, on a des valeurs différentes pour la même date de clôture.
-
-```{r}
-table_chiffrescles_2015 %>%
-  select(siren, 
-         ca = ca_1, 
-         resultat = resultat_1, 
-         duree = duree_1, 
-         date_cloture = date_de_cloture_exercice_1, 
-         date_de_publication) %>% 
-  distinct(siren, ca, resultat, date_cloture, .keep_all = TRUE) %>% 
-  filter(is.na(ca) == FALSE) %>% 
-  group_by(siren, date_cloture, date_de_publication) %>% 
-  filter(n() > 1) %>%
-  arrange(siren) 
-```
-
-Si on fait l'hypothèse que les informations publiées à une date postérieure sont des corrections des premières, le problème des valeurs contradictoire est négligeable. 
-
-## Fichier 2014, valeurs de 2012
-
-Pour les valeurs de 2012, il faut utiliser les fichier des Chiffres clés de 2014. 
-
-```{r, include=FALSE}
-table_chiffrescles_2014 <- read_csv2(file = "data/chiffres-cles-2014.csv")
+table_greffes2014 <- import_infogreffes_from2014(
+  year = 2014, 
+  source_file = "raw-data/chiffres-cles-2014.csv"
+  )
+table_greffes2014 %>% glimpse()
 ```
 
 ```{r}
-table_chiffrescles_2014 %>% glimpse()
-```
-
-```{r}
-table_greffes_2012 <- table_chiffrescles_2014 %>%
-  select(
-    siren, ca = ca_2012, 
-    resultat = resultat_2012, 
-    date_cloture = date_de_cloture1,  
-    date_de_depot = date_de_depot1
-  ) %>% 
-  arrange(siren, date_cloture, date_de_depot)
+summary(table_greffes2014, na.rm = TRUE)
 ```
 
 
-```{r}
-table_greffes_2012 %>%
-  distinct(siren, ca, resultat, date_cloture, .keep_all = TRUE) %>% 
-  filter(is.na(ca) == FALSE) %>%
-  group_by(siren, date_cloture) %>% 
-  filter(n() > 1)
-```
 
-```{r}
-table_greffes_2012 %>%
-  distinct(siren, ca, resultat, date_cloture, .keep_all = TRUE) %>% 
-  filter(is.na(ca) == FALSE) %>%
-  group_by(siren, date_cloture, date_de_depot) %>% 
-  filter(n() > 1)
-```
+
+
+
 
